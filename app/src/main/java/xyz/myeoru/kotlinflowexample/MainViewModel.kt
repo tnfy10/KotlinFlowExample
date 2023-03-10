@@ -10,12 +10,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<MainUiState>(MainUiState.Loading)
+    private val _uiState = MutableStateFlow<MainUiState>(MainUiState.Init)
     val uiState: StateFlow<MainUiState> = _uiState
-
-    init {
-        stateTest()
-    }
 
     fun stateTest() {
         viewModelScope.launch {
@@ -62,6 +58,7 @@ class MainViewModel : ViewModel() {
 }
 
 sealed class MainUiState {
+    object Init : MainUiState()
     object Loading : MainUiState()
     data class Success(val text: String) : MainUiState()
     data class Error(val throwable: Throwable) : MainUiState()

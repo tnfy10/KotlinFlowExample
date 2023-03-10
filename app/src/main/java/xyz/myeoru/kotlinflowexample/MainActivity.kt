@@ -19,35 +19,51 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.stateFlowTestBtn.setOnClickListener {
-            viewModel.stateTest()
-        }
+        binding.apply {
+            stateFlowTestBtn.setOnClickListener {
+                viewModel.stateTest()
+            }
 
-        binding.callbackFlowTestBtn.setOnClickListener {
-            viewModel.callbackFlowTest()
+            callbackFlowTestBtn.setOnClickListener {
+                viewModel.callbackFlowTest()
+            }
         }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.uiState.collect { uiState ->
                     when (uiState) {
+                        is MainUiState.Init -> {
+                            binding.apply {
+                                stateFlowTestBtn.visibility = View.VISIBLE
+                                callbackFlowTestBtn.visibility = View.VISIBLE
+                                textView.visibility = View.INVISIBLE
+                                loading.visibility = View.INVISIBLE
+                            }
+                        }
                         is MainUiState.Loading -> {
-                            binding.stateFlowTestBtn.visibility = View.INVISIBLE
-                            binding.callbackFlowTestBtn.visibility = View.INVISIBLE
-                            binding.textView.visibility = View.INVISIBLE
-                            binding.loading.visibility = View.VISIBLE
+                            binding.apply {
+                                stateFlowTestBtn.visibility = View.INVISIBLE
+                                callbackFlowTestBtn.visibility = View.INVISIBLE
+                                textView.visibility = View.INVISIBLE
+                                loading.visibility = View.VISIBLE
+                            }
                         }
                         is MainUiState.Success -> {
-                            binding.loading.visibility = View.INVISIBLE
-                            binding.textView.visibility = View.VISIBLE
-                            binding.textView.text = uiState.text
+                            binding.apply {
+                                loading.visibility = View.INVISIBLE
+                                textView.visibility = View.VISIBLE
+                                textView.text = uiState.text
+                            }
                         }
                         is MainUiState.Error -> {
-                            binding.loading.visibility = View.INVISIBLE
-                            binding.stateFlowTestBtn.visibility = View.VISIBLE
-                            binding.callbackFlowTestBtn.visibility = View.VISIBLE
-                            binding.textView.visibility = View.VISIBLE
-                            binding.textView.text = uiState.throwable.message
+                            binding.apply {
+                                loading.visibility = View.INVISIBLE
+                                stateFlowTestBtn.visibility = View.VISIBLE
+                                callbackFlowTestBtn.visibility = View.VISIBLE
+                                textView.visibility = View.VISIBLE
+                                textView.text = uiState.throwable.message
+                            }
                         }
                     }
                 }
