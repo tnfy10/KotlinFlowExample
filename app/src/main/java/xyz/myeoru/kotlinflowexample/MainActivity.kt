@@ -1,18 +1,12 @@
 package xyz.myeoru.kotlinflowexample
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import xyz.myeoru.kotlinflowexample.databinding.ActivityMainBinding
 
@@ -25,8 +19,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.button.setOnClickListener {
+        binding.stateFlowTestBtn.setOnClickListener {
             viewModel.stateTest()
+        }
+
+        binding.callbackFlowTestBtn.setOnClickListener {
+            viewModel.callbackFlowTest()
         }
 
         lifecycleScope.launch {
@@ -34,7 +32,8 @@ class MainActivity : AppCompatActivity() {
                 viewModel.uiState.collect { uiState ->
                     when (uiState) {
                         is MainUiState.Loading -> {
-                            binding.button.visibility = View.INVISIBLE
+                            binding.stateFlowTestBtn.visibility = View.INVISIBLE
+                            binding.callbackFlowTestBtn.visibility = View.INVISIBLE
                             binding.textView.visibility = View.INVISIBLE
                             binding.loading.visibility = View.VISIBLE
                         }
@@ -45,7 +44,8 @@ class MainActivity : AppCompatActivity() {
                         }
                         is MainUiState.Error -> {
                             binding.loading.visibility = View.INVISIBLE
-                            binding.button.visibility = View.VISIBLE
+                            binding.stateFlowTestBtn.visibility = View.VISIBLE
+                            binding.callbackFlowTestBtn.visibility = View.VISIBLE
                             binding.textView.visibility = View.VISIBLE
                             binding.textView.text = uiState.throwable.message
                         }

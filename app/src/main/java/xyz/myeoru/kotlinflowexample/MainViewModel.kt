@@ -1,13 +1,12 @@
 package xyz.myeoru.kotlinflowexample
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
@@ -22,9 +21,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = MainUiState.Loading
             delay(1500)
-            getString().onCompletion {
-                Log.e("테스트", "완료됨")
-            }.collect {
+            getString().collect {
                 _uiState.value = MainUiState.Success(it)
             }
             delay(1500)
@@ -37,10 +34,35 @@ class MainViewModel : ViewModel() {
     private suspend fun getString() = flow {
         emit("StateFlow test")
     }
+
+    fun callbackFlowTest() {
+        viewModelScope.launch {
+            getStringCallback().catch {
+                _uiState.value = MainUiState.Error(it)
+            }.collect {
+                _uiState.value = MainUiState.Success(it)
+            }
+        }
+    }
+
+    private fun getStringCallback() = callbackFlow {
+        CallbackCaller(object : CallbackListener {
+            override fun onResult(result: String) {
+                trySend(result)
+                    .onSuccess {
+                        close()
+                    }.onFailure {
+                        throw it ?: Throwable("onFailure Throwable is null")
+                    }
+            }
+        }).call()
+
+        awaitClose()
+    }
 }
 
 sealed class MainUiState {
-    object Loading: MainUiState()
-    data class Success(val text: String): MainUiState()
-    data class Error(val throwable: Throwable): MainUiState()
+    object Loading : MainUiState()
+    data class Success(val text: String) : MainUiState()
+    data class Error(val throwable: Throwable) : MainUiState()
 }
